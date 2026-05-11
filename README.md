@@ -55,7 +55,6 @@ This Spring Boot application provides a platform for tracking vehicles in real t
 
 ## Publishing to GitHub
 
-This project is intended to live in a **new** repository under [theparamvrsingh](https://github.com/theparamvrsingh), not as a fork of any upstream template.
 
 1. On GitHub, create a new empty repository (for example `fleet-analytics-tracking-backend`).
 2. From this project directory:
