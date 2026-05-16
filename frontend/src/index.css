@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-here-dark: #0f1621;
+  --color-here-card: #182232;
+  --color-here-border: #28364a;
+  --color-here-neon: #00e676;
+  --color-here-teal: #00bfa5;
+  --color-here-accent: #2979ff;
+  --color-here-text: #e2e8f0;
+  --color-here-muted: #94a3b8;
+}
+
+@layer base {
+  body {
+    @apply bg-here-dark text-here-text font-sans antialiased;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-here-card border border-here-border rounded-xl shadow-lg;
+  }
+  
+  .input-field {
+    @apply w-full bg-here-dark border border-here-border rounded-lg px-4 py-2 text-here-text focus:outline-none focus:border-here-teal focus:ring-1 focus:ring-here-teal transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-here-teal hover:bg-[#00a892] text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-here-border hover:bg-[#344660] text-here-text font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2;
+  }
+}
+
+/* Custom Scrollbar for a sleek look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1621;
+}
+::-webkit-scrollbar-thumb {
+  background: #28364a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #344660;
+}
