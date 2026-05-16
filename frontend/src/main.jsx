@@ -1,13 +1,15 @@
-import { StrictMode } from 'react'
-if (typeof global === 'undefined') {
+// Polyfill for SockJS compatibility
+if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
   window.global = window;
 }
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
   </StrictMode>,
-)
+);
