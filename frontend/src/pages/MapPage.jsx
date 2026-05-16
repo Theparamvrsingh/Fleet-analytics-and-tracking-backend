@@ -60,6 +60,7 @@ const MapPage = () => {
           center={mapCenter} 
           zoom={13} 
           style={{ height: '100%', width: '100%', background: '#0a0f18' }}
+          attributionControl={false}
         >
           <ChangeView center={mapCenter} zoom={13} />
           <TileLayer

@@ -27,12 +27,14 @@ const TrackerApp = () => {
 
         // Send to backend
         try {
+          console.log(`Sending location to backend for ${regNumber}:`, { latitude, longitude });
           await locationApi.create({
             reg: regNumber,
             lat: latitude,
             lon: longitude,
             status: 'Active'
           });
+          console.log('Location sent successfully');
         } catch (err) {
           console.error('Failed to send location to server', err);
         }
