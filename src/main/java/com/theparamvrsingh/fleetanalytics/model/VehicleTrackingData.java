@@ -22,5 +22,7 @@ public class VehicleTrackingData {
     private String status;
     private LocalDateTime timestamp;
     private String reg;
+    private Double speed;
+    private String alertMessage;
 
 }

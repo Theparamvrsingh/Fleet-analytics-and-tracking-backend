@@ -17,6 +17,8 @@ public class VehicleTrackingDataToSocketResponse {
                     .status(data.getStatus())
                     .timestamp(data.getTimestamp().toString())
                     .reg(data.getReg())
+                    .speed(data.getSpeed())
+                    .alertMessage(data.getAlertMessage())
                     .build());
         }
         return socketIOVehicleTrackingDataResponses;

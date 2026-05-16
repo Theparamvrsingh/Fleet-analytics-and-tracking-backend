@@ -33,7 +33,9 @@ public class VehicleLocationRepositoryImpl implements VehicleLocationCustomRepos
     @Override
     public List<VehicleTrackingData> findByReg(String reg) {
         Criteria criteria = Criteria.where("reg").is(reg);
-        return mongoTemplate.find(org.springframework.data.mongodb.core.query.Query.query(criteria).limit(20), VehicleTrackingData.class);
+        return mongoTemplate.find(org.springframework.data.mongodb.core.query.Query.query(criteria)
+                .with(Sort.by(Sort.Direction.DESC, "timestamp"))
+                .limit(20), VehicleTrackingData.class);
     }
 
 }

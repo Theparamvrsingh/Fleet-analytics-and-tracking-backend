@@ -15,4 +15,6 @@ public class SocketIOVehicleTrackingDataResponse {
     private String status;
     private String timestamp;
     private String reg;
+    private Double speed;
+    private String alertMessage;
 }

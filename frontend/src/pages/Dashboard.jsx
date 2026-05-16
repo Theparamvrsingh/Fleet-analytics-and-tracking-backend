@@ -42,16 +42,14 @@ const Dashboard = () => {
   });
 
   const updateDashboardStats = (locations, totalVehicles) => {
-    const activeCount = locations.filter(l => l.status === 'Active').length;
+    const activeCount = locations.length;
     
     setStats(prev => ({
       ...prev,
       total: totalVehicles,
       active: activeCount,
-      // Total distance can be mocked as a function of data points for now, 
-      // or calculated properly if we had historical points.
       distance: (locations.length * 1.2).toFixed(1),
-      alerts: locations.filter(l => l.status === 'Alert').length || prev.alerts
+      alerts: locations.filter(l => l.status === 'Alert').length
     }));
 
     // Auto-center map to the first active vehicle if available
@@ -125,10 +123,10 @@ const Dashboard = () => {
           trendUp={true}
         />
         <StatCard 
-          title="Speed Alerts" 
+          title="AI Behavior Alerts" 
           value={stats.alerts} 
           icon={<AlertTriangle className="text-red-400" />} 
-          trend="System alerts"
+          trend="Anomalies detected"
           trendUp={false}
           danger={stats.alerts > 0}
         />
@@ -158,6 +156,9 @@ const Dashboard = () => {
                     <div className="text-center">
                       <strong className="block text-gray-800">{loc.reg}</strong>
                       <span className="text-xs text-gray-500">Status: {loc.status}</span>
+                      {loc.alertMessage && (
+                        <p className="text-[10px] text-red-500 font-bold mt-1">{loc.alertMessage}</p>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
@@ -171,8 +172,13 @@ const Dashboard = () => {
         </div>
 
         <div className="card flex flex-col overflow-hidden">
-          <div className="p-5 border-b border-here-border bg-here-card/80">
-            <h3 className="font-semibold text-white">Live Events</h3>
+          <div className="p-5 border-b border-here-border bg-here-card/80 flex justify-between items-center">
+            <h3 className="font-semibold text-white">Live Events & AI Insights</h3>
+            {stats.alerts > 0 && (
+              <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full animate-pulse border border-red-500/30">
+                {stats.alerts} Issues
+              </span>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {liveLocations.length === 0 ? (
@@ -182,14 +188,19 @@ const Dashboard = () => {
               </div>
             ) : (
               liveLocations.map((loc, index) => (
-                <div key={index} className="flex gap-4 items-start p-3 rounded-lg hover:bg-[#1f2a3a] transition-colors border border-transparent hover:border-here-border group">
-                  <div className="w-8 h-8 rounded-full bg-here-teal/20 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-here-teal/30">
-                    <CarFront size={14} className="text-here-teal" />
+                <div key={index} className={`flex gap-4 items-start p-3 rounded-lg transition-colors border ${loc.status === 'Alert' ? 'bg-red-500/10 border-red-500/30' : 'hover:bg-[#1f2a3a] border-transparent hover:border-here-border'} group`}>
+                  <div className={`w-8 h-8 rounded-full ${loc.status === 'Alert' ? 'bg-red-500/20' : 'bg-here-teal/20'} flex items-center justify-center shrink-0 mt-0.5`}>
+                    {loc.status === 'Alert' ? <AlertTriangle size={14} className="text-red-400" /> : <CarFront size={14} className="text-here-teal" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{loc.reg}</p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <p className={`text-sm font-medium truncate ${loc.status === 'Alert' ? 'text-red-400' : 'text-white'}`}>{loc.reg}</p>
+                    <div className="flex flex-col mt-1">
                       <span className="text-xs text-here-muted font-mono">{loc.lat.toFixed(4)}, {loc.lon.toFixed(4)}</span>
+                      {loc.alertMessage && (
+                        <span className="text-[10px] text-red-400 font-medium mt-1">
+                          ⚠️ {loc.alertMessage}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs text-here-muted whitespace-nowrap text-[10px]">
