@@ -10,6 +10,7 @@ import com.theparamvrsingh.fleetanalytics.repository.VehicleLocationRepository;
 import com.theparamvrsingh.fleetanalytics.web.dto.VehicleLocationHistoryResponse;
 import com.theparamvrsingh.fleetanalytics.web.dto.VehicleLocationRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
 
     private final VehicleLocationRepository vehicleLocationRepository;
     private final VehicleLocationCustomRepository vehicleLocationCustomRepository;
-    private final SocketIOServer socketIOServer;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final double MAX_SPEED_KPH = 80.0;
 
@@ -82,7 +83,7 @@ public class VehicleLocationServiceImpl implements VehicleLocationService {
                 .build();
         vehicleLocationRepository.save(vehicleTrackingData);
 
-        socketIOServer.getBroadcastOperations().sendEvent("location", VehicleTrackingDataToSocketResponse.mapList(getVehicleLocations()));
+        messagingTemplate.convertAndSend("/topic/location", VehicleTrackingDataToSocketResponse.mapList(getVehicleLocations()));
         return CompletableFuture.completedFuture(null);
     }
 
