@@ -147,9 +147,9 @@ const Dashboard = () => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               />
-              {liveLocations.map((loc, i) => (
+              {liveLocations.filter(loc => loc && loc.lat && loc.lon).map((loc, i) => (
                 <Marker 
-                  key={`${loc.reg}-${i}`} 
+                  key={`${loc.reg || i}-${i}`} 
                   position={[loc.lat, loc.lon]}
                   icon={neonIcon}
                 >
@@ -194,9 +194,11 @@ const Dashboard = () => {
                     {loc.status === 'Alert' ? <AlertTriangle size={14} className="text-red-400" /> : <CarFront size={14} className="text-here-teal" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${loc.status === 'Alert' ? 'text-red-400' : 'text-white'}`}>{loc.reg}</p>
+                    <p className={`text-sm font-medium truncate ${loc.status === 'Alert' ? 'text-red-400' : 'text-white'}`}>{loc.reg || 'Unknown Vehicle'}</p>
                     <div className="flex flex-col mt-1">
-                      <span className="text-xs text-here-muted font-mono">{loc.lat.toFixed(4)}, {loc.lon.toFixed(4)}</span>
+                      <span className="text-xs text-here-muted font-mono">
+                        {loc.lat ? loc.lat.toFixed(4) : '0.0000'}, {loc.lon ? loc.lon.toFixed(4) : '0.0000'}
+                      </span>
                       {loc.alertMessage && (
                         <span className="text-[10px] text-red-400 font-medium mt-1">
                           ⚠️ {loc.alertMessage}
