@@ -1,11 +1,9 @@
 package com.theparamvrsingh.fleetanalytics.service;
 
-import com.corundumstudio.socketio.SocketIOServer;
 import com.theparamvrsingh.fleetanalytics.model.VehicleTrackingData;
 import com.theparamvrsingh.fleetanalytics.repository.VehicleLocationCustomRepository;
 import com.theparamvrsingh.fleetanalytics.repository.VehicleLocationRepository;
 import com.theparamvrsingh.fleetanalytics.web.dto.VehicleLocationHistoryResponse;
-import com.theparamvrsingh.fleetanalytics.web.dto.VehicleLocationRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -13,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mongo.StandardMongoClientSettingsBuilderCustomizer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -39,7 +37,7 @@ public class VehicleLocationServiceImplTest {
     private VehicleLocationCustomRepository vehicleLocationCustomRepository;
 
     @MockBean
-    private SocketIOServer socketIOServer;
+    private SimpMessagingTemplate messagingTemplate;
 
     @Test
     public void getVehicleLocationHistory_ValidReg_ReturnsHistory() {
