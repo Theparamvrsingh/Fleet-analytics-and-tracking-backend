@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, CarFront, AlertTriangle, Route } from 'lucide-react';
+import { Activity, CarFront, AlertTriangle, Route, Server, Cpu, Database, Zap, ArrowRight, Info } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { socketService } from '../services/socket';
@@ -13,14 +13,6 @@ const ChangeView = ({ center, zoom }) => {
   }
   return null;
 };
-
-// Fix for default Leaflet icon in React
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
 
 // Custom Neon Icon for vehicles
 const neonIcon = new L.DivIcon({
@@ -52,7 +44,6 @@ const Dashboard = () => {
       alerts: locations.filter(l => l.status === 'Alert').length
     }));
 
-    // Auto-center map to the first active vehicle if available
     if (locations.length > 0) {
       setMapCenter([locations[0].lat, locations[0].lon]);
     }
@@ -86,54 +77,62 @@ const Dashboard = () => {
 
     return () => {
       socketService.unsubscribe('location');
-      socketService.disconnect();
     };
   }, [vehicles.length]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Fleet Overview</h2>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-here-neon animate-pulse"></span>
-          <span className="text-sm text-here-muted">Live Tracking Active</span>
+    <div className="flex flex-col gap-8">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-1">Fleet Operations Hub</h2>
+          <p className="text-here-muted text-sm flex items-center gap-2">
+            <Cpu size={14} className="text-here-neon" /> 
+            AI-Driven Real-Time Tracking & Anomaly Detection
+          </p>
+        </div>
+        <div className="flex items-center gap-3 bg-[#0f1621] px-4 py-2 rounded-full border border-here-border">
+          <span className="w-2 h-2 rounded-full bg-here-neon animate-pulse shadow-[0_0_8px_#00e676]"></span>
+          <span className="text-xs font-semibold text-here-neon uppercase tracking-wider">Live System Active</span>
         </div>
       </div>
 
+      {/* Analytics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Vehicles" 
+          title="Total Fleet" 
           value={stats.total} 
           icon={<CarFront className="text-here-accent" />} 
-          trend="In database"
+          trend="Registered in DB"
           trendUp={true}
         />
         <StatCard 
-          title="Active Vehicles" 
+          title="Active Tracks" 
           value={stats.active} 
           icon={<Activity className="text-here-neon" />} 
-          trend="Tracking now"
+          trend="Live WebSocket streams"
           trendUp={stats.active > 0}
         />
         <StatCard 
-          title="Total Distance" 
+          title="Session Distance" 
           value={`${stats.distance} km`} 
           icon={<Route className="text-here-teal" />} 
-          trend="Session total"
+          trend="Calculated via Haversine"
           trendUp={true}
         />
         <StatCard 
           title="AI Behavior Alerts" 
           value={stats.alerts} 
           icon={<AlertTriangle className="text-red-400" />} 
-          trend="Anomalies detected"
+          trend="Real-time anomalies"
           trendUp={false}
           danger={stats.alerts > 0}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-        <div className="lg:col-span-2 card flex flex-col overflow-hidden relative group">
+      {/* Map and Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 card flex flex-col h-[550px] overflow-hidden relative group">
           <div className="flex-1 w-full h-full relative z-0">
             <MapContainer 
               center={mapCenter}
@@ -144,7 +143,6 @@ const Dashboard = () => {
             >
               <ChangeView center={mapCenter} zoom={13} />
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               />
               {liveLocations.filter(loc => loc && loc.lat && loc.lon).map((loc, i) => (
@@ -154,64 +152,156 @@ const Dashboard = () => {
                   icon={neonIcon}
                 >
                   <Popup>
-                    <div className="text-center">
-                      <strong className="block text-gray-800">{loc.reg}</strong>
-                      <span className="text-xs text-gray-500">Status: {loc.status}</span>
-                      {loc.alertMessage && (
-                        <p className="text-[10px] text-red-500 font-bold mt-1">{loc.alertMessage}</p>
-                      )}
+                    <div className="p-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CarFront size={14} className="text-here-teal" />
+                        <strong className="text-gray-800">{loc.reg}</strong>
+                      </div>
+                      <div className="text-[10px] text-gray-500 space-y-1">
+                        <p>Status: <span className={loc.status === 'Alert' ? 'text-red-500 font-bold' : 'text-green-600 font-bold'}>{loc.status}</span></p>
+                        {loc.speed && <p>Speed: {loc.speed.toFixed(1)} km/h</p>}
+                        {loc.alertMessage && <p className="text-red-500 italic">"{loc.alertMessage}"</p>}
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
               ))}
             </MapContainer>
           </div>
-          
-          <div className="absolute top-0 left-0 w-full z-[1000] p-5 bg-gradient-to-b from-here-card/90 to-transparent flex justify-between items-center pointer-events-none">
-            <h3 className="font-semibold text-white pointer-events-auto">Live Tracking Map</h3>
+          <div className="absolute top-5 left-5 z-[1000] flex gap-2">
+            <div className="bg-here-card/90 backdrop-blur-md border border-here-border p-3 rounded-lg flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-here-neon/20 flex items-center justify-center">
+                <Zap size={16} className="text-here-neon" />
+              </div>
+              <div>
+                <p className="text-[10px] text-here-muted uppercase font-bold tracking-tight">AI Agent Logic</p>
+                <p className="text-xs text-white font-medium">Tracking {liveLocations.length} active devices</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="card flex flex-col overflow-hidden">
+        <div className="card flex flex-col h-[550px] overflow-hidden">
           <div className="p-5 border-b border-here-border bg-here-card/80 flex justify-between items-center">
-            <h3 className="font-semibold text-white">Live Events & AI Insights</h3>
+            <div>
+              <h3 className="font-semibold text-white">Live Event Stream</h3>
+              <p className="text-[10px] text-here-muted uppercase tracking-widest">WebSocket Sub: /topic/location</p>
+            </div>
             {stats.alerts > 0 && (
-              <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full animate-pulse border border-red-500/30">
-                {stats.alerts} Issues
+              <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full animate-pulse border border-red-500/30 font-bold">
+                {stats.alerts} ANOMALIES
               </span>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-here-border">
             {liveLocations.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-here-muted text-sm gap-2">
-                <Activity size={24} className="opacity-50" />
-                <p>Waiting for vehicle data...</p>
+              <div className="h-full flex flex-col items-center justify-center text-here-muted text-sm gap-2 opacity-50">
+                <Activity size={32} className="animate-spin-slow" />
+                <p>Establishing Socket Connection...</p>
               </div>
             ) : (
               liveLocations.map((loc, index) => (
-                <div key={index} className={`flex gap-4 items-start p-3 rounded-lg transition-colors border ${loc.status === 'Alert' ? 'bg-red-500/10 border-red-500/30' : 'hover:bg-[#1f2a3a] border-transparent hover:border-here-border'} group`}>
-                  <div className={`w-8 h-8 rounded-full ${loc.status === 'Alert' ? 'bg-red-500/20' : 'bg-here-teal/20'} flex items-center justify-center shrink-0 mt-0.5`}>
-                    {loc.status === 'Alert' ? <AlertTriangle size={14} className="text-red-400" /> : <CarFront size={14} className="text-here-teal" />}
+                <div key={index} className={`flex gap-4 items-start p-3 rounded-xl transition-all border ${loc.status === 'Alert' ? 'bg-red-500/10 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'bg-here-dark/40 border-here-border/30 hover:border-here-border hover:bg-here-dark/60'} group`}>
+                  <div className={`w-10 h-10 rounded-xl ${loc.status === 'Alert' ? 'bg-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'bg-here-teal/20'} flex items-center justify-center shrink-0 mt-0.5 transition-transform group-hover:scale-110`}>
+                    {loc.status === 'Alert' ? <AlertTriangle size={18} className="text-red-400" /> : <CarFront size={18} className="text-here-teal" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${loc.status === 'Alert' ? 'text-red-400' : 'text-white'}`}>{loc.reg || 'Unknown Vehicle'}</p>
+                    <p className={`text-sm font-bold truncate ${loc.status === 'Alert' ? 'text-red-400' : 'text-white'}`}>{loc.reg || 'UNKNOWN_VEHICLE'}</p>
                     <div className="flex flex-col mt-1">
-                      <span className="text-xs text-here-muted font-mono">
-                        {loc.lat ? loc.lat.toFixed(4) : '0.0000'}, {loc.lon ? loc.lon.toFixed(4) : '0.0000'}
-                      </span>
-                      {loc.alertMessage && (
-                        <span className="text-[10px] text-red-400 font-medium mt-1">
-                          ⚠️ {loc.alertMessage}
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[11px] text-here-muted font-mono bg-here-dark/80 px-1.5 py-0.5 rounded w-fit">
+                          {loc.lat ? loc.lat.toFixed(4) : '0.0000'}, {loc.lon ? loc.lon.toFixed(4) : '0.0000'}
                         </span>
+                        {loc.speed !== undefined && (
+                          <span className="text-[11px] text-here-teal font-bold bg-here-teal/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Zap size={10} />
+                            {loc.speed.toFixed(1)} km/h
+                          </span>
+                        )}
+                      </div>
+                      {loc.alertMessage ? (
+                        <div className="mt-2 flex items-center gap-2 bg-red-500/20 p-2 rounded-lg border border-red-500/20">
+                          <Zap size={10} className="text-red-400" />
+                          <span className="text-[10px] text-red-400 font-bold uppercase tracking-tighter">
+                            {loc.alertMessage}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-here-neon"></div>
+                          <span className="text-[10px] text-here-neon font-medium uppercase tracking-tighter">Healthy Operation</span>
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <div className="text-xs text-here-muted whitespace-nowrap text-[10px]">
-                    {new Date(loc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* System Workflow Visualization */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-6 bg-here-accent rounded-full"></div>
+          <h3 className="text-xl font-bold text-white uppercase tracking-wider">System Architecture & Workflow</h3>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <WorkflowStep 
+            icon={<Smartphone className="text-blue-400" />}
+            title="Data Ingestion"
+            tech="React / Geolocation API"
+            description="Mobile devices capture high-precision GPS coordinates and transmit them via encrypted REST POST requests."
+            step="01"
+          />
+          <WorkflowStep 
+            icon={<Cpu className="text-here-neon" />}
+            title="AI Processing"
+            tech="Java 17 / Spring Boot"
+            description="The backend calculates velocity using Haversine formulas and detects geofence anomalies in async threads."
+            step="02"
+          />
+          <WorkflowStep 
+            icon={<Zap className="text-here-teal" />}
+            title="Real-Time Sync"
+            tech="STOMP WebSockets"
+            description="Processed insights are broadcasted to all dashboards with sub-second latency for immediate fleet visibility."
+            step="03"
+          />
+        </div>
+
+        <div className="card p-6 bg-gradient-to-br from-here-card to-here-dark border-here-border/50">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-here-accent/20 flex items-center justify-center shrink-0 mt-1">
+              <Server size={20} className="text-here-accent" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-white mb-3">Backend Intelligence Highlights (For Interview)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                <TechHighlight 
+                  title="Multi-Threaded Concurrency" 
+                  tech="Spring @Async / ThreadPoolTaskExecutor" 
+                  desc="Location ingestion is non-blocking, ensuring high availability under heavy fleet load."
+                />
+                <TechHighlight 
+                  title="Stateless Horizontal Scaling" 
+                  tech="REST + WebSocket Architecture" 
+                  desc="The service is designed to scale horizontally across multiple instances behind a load balancer."
+                />
+                <TechHighlight 
+                  title="Persistence Layer" 
+                  tech="MongoDB Atlas" 
+                  desc="High-throughput NoSQL storage ensures low-latency writes for millions of GPS data points."
+                />
+                <TechHighlight 
+                  title="Pub/Sub Real-Time Flow" 
+                  tech="Message Broker Pattern" 
+                  desc="Utilizes a subscription-based model allowing thousands of managers to watch different vehicle groups simultaneously."
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -220,9 +310,9 @@ const Dashboard = () => {
 };
 
 const StatCard = ({ title, value, icon, trend, trendUp, danger }) => (
-  <div className="card p-6 flex flex-col gap-4 hover:-translate-y-1 transition-transform duration-300">
+  <div className="card p-6 flex flex-col gap-4 hover:-translate-y-1 transition-all duration-300 border-here-border/30 hover:border-here-border group shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
     <div className="flex justify-between items-start">
-      <div className="w-12 h-12 rounded-xl bg-[#0f1621] border border-here-border flex items-center justify-center shadow-inner">
+      <div className="w-12 h-12 rounded-xl bg-here-dark border border-here-border flex items-center justify-center shadow-inner group-hover:bg-here-card transition-colors">
         {icon}
       </div>
       {danger && (
@@ -233,15 +323,55 @@ const StatCard = ({ title, value, icon, trend, trendUp, danger }) => (
       )}
     </div>
     <div>
-      <h4 className="text-here-muted text-sm font-medium mb-1">{title}</h4>
+      <h4 className="text-here-muted text-sm font-semibold uppercase tracking-wider mb-1">{title}</h4>
       <div className="flex items-baseline gap-3">
-        <p className="text-3xl font-bold text-white">{value}</p>
-        <span className={`text-xs font-medium ${trendUp ? 'text-here-neon' : (danger ? 'text-red-400' : 'text-here-muted')}`}>
+        <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
+        <span className={`text-[10px] font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded ${trendUp ? 'bg-here-neon/10 text-here-neon' : (danger ? 'bg-red-500/10 text-red-400' : 'bg-here-border text-here-muted')}`}>
           {trend}
         </span>
       </div>
     </div>
   </div>
+);
+
+const WorkflowStep = ({ icon, title, tech, description, step }) => (
+  <div className="card p-6 border-here-border/50 hover:border-here-accent transition-all group relative overflow-hidden">
+    <div className="absolute -right-4 -top-4 text-6xl font-black text-white/5 group-hover:text-here-accent/10 transition-colors">{step}</div>
+    <div className="mb-4 w-10 h-10 rounded-lg bg-here-dark flex items-center justify-center group-hover:scale-110 transition-transform">
+      {icon}
+    </div>
+    <h4 className="text-white font-bold mb-1">{title}</h4>
+    <p className="text-[10px] text-here-accent font-bold uppercase mb-3">{tech}</p>
+    <p className="text-xs text-here-muted leading-relaxed">{description}</p>
+  </div>
+);
+
+const TechHighlight = ({ title, tech, desc }) => (
+  <div className="flex gap-3">
+    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-here-teal shrink-0"></div>
+    <div>
+      <p className="text-sm font-bold text-white">{title} <span className="text-[10px] text-here-teal ml-1 font-mono">({tech})</span></p>
+      <p className="text-[11px] text-here-muted mt-1 leading-relaxed">{desc}</p>
+    </div>
+  </div>
+);
+
+const Smartphone = ({ className, size }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size || 24} 
+    height={size || 24} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+    <path d="M12 18h.01"/>
+  </svg>
 );
 
 export default Dashboard;
