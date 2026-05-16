@@ -20,6 +20,7 @@ export const vehicleApi = {
 export const locationApi = {
   getLocations: () => apiClient.get('/vehicle/location'),
   getHistory: (reg) => apiClient.get(`/vehicle/location/history/${reg}`),
+  create: (data) => apiClient.post('/vehicle/location', data),
 };
 
 export default apiClient;

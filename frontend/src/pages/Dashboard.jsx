@@ -44,20 +44,23 @@ const Dashboard = () => {
 
     // WebSocket connection for real-time updates
     socketService.connect();
-    
-    // Fallback mock data if server isn't sending WS yet
-    socketService.startMockData();
 
-    socketService.subscribe('/topic/location', (data) => {
-      setLiveLocations(prev => {
-        // Keep only last 10 locations in the live feed
-        const newLocations = [data, ...prev].slice(0, 10);
-        return newLocations;
-      });
+    // Listen to the actual 'location' event sent from Spring Boot backend
+    // It sends a List<SocketIOVehicleTrackingDataResponse>
+    socketService.subscribe('location', (dataArray) => {
+      if (Array.isArray(dataArray) && dataArray.length > 0) {
+        setLiveLocations(dataArray.slice(0, 10));
+      } else if (dataArray && dataArray.reg) {
+        // Fallback just in case it sends a single object
+        setLiveLocations(prev => {
+          const newLocations = [dataArray, ...prev].slice(0, 10);
+          return newLocations;
+        });
+      }
     });
 
     return () => {
-      socketService.unsubscribe('/topic/location');
+      socketService.unsubscribe('location');
       socketService.disconnect();
     };
   }, []);
