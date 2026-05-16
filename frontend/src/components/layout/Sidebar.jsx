@@ -21,7 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <div className="h-16 flex items-center justify-between px-6 border-b border-here-border">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-here-neon shadow-[0_0_8px_#00e676]"></span>
-            Fleet<span className="text-here-teal">Tracker</span>
+            Fleet<span className="text-here-teal">Analytics</span>
           </h1>
           <button onClick={() => setIsOpen(false)} className="md:hidden text-here-muted hover:text-white">
             <X size={20} />
@@ -48,11 +48,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </nav>
       
       <div className="p-4 border-t border-here-border">
-        <div className="bg-[#0f1621] p-4 rounded-xl border border-here-border text-sm">
-          <p className="text-here-muted mb-1">System Status</p>
+        <div className="bg-[#0f1621] p-4 rounded-xl border border-here-border text-xs">
+          <p className="text-white font-bold mb-2">Paramveer Singh</p>
           <div className="flex items-center gap-2 text-here-neon">
-            <span className="w-2 h-2 rounded-full bg-here-neon animate-pulse"></span>
-            All systems operational
+            <span className="w-1.5 h-1.5 rounded-full bg-here-neon animate-pulse"></span>
+            System Live
           </div>
         </div>
       </div>

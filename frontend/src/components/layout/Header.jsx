@@ -30,8 +30,8 @@ const Header = ({ toggleSidebar }) => {
             <User size={16} />
           </div>
           <div className="hidden md:block">
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-here-muted">Fleet Manager</p>
+            <p className="text-sm font-medium text-white">Paramveer Singh</p>
+            <p className="text-xs text-here-muted">Chief Engineer</p>
           </div>
         </div>
       </div>
