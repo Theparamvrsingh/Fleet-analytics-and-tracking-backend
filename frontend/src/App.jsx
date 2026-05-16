@@ -4,6 +4,8 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
 import TrackerApp from './pages/TrackerApp';
+import MapPage from './pages/MapPage';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -13,8 +15,8 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="vehicles" element={<Vehicles />} />
-          <Route path="map" element={<div className="text-white p-8">Live Map Full View (Coming Soon)</div>} />
-          <Route path="settings" element={<div className="text-white p-8">Settings (Coming Soon)</div>} />
+          <Route path="map" element={<MapPage />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

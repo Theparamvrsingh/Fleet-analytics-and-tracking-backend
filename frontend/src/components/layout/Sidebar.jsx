@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CarFront, Settings, Map } from 'lucide-react';
+import { LayoutDashboard, CarFront, Settings, Map, X } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Vehicles', path: '/vehicles', icon: <CarFront size={20} /> },
@@ -11,13 +11,22 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-here-card border-r border-here-border flex flex-col h-full shrink-0">
-      <div className="h-16 flex items-center px-6 border-b border-here-border">
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-here-neon shadow-[0_0_8px_#00e676]"></span>
-          Fleet<span className="text-here-teal">Tracker</span>
-        </h1>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsOpen(false)} />
+      )}
+      
+      <aside className={`fixed md:relative z-50 w-64 bg-here-card border-r border-here-border flex flex-col h-full shrink-0 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-here-border">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-here-neon shadow-[0_0_8px_#00e676]"></span>
+            Fleet<span className="text-here-teal">Tracker</span>
+          </h1>
+          <button onClick={() => setIsOpen(false)} className="md:hidden text-here-muted hover:text-white">
+            <X size={20} />
+          </button>
+        </div>
       
       <nav className="flex-1 py-6 px-4 flex flex-col gap-2">
         {navItems.map((item) => (
@@ -48,6 +57,7 @@ const Sidebar = () => {
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

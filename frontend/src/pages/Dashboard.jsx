@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, CarFront, AlertTriangle, Route } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import { socketService } from '../services/socket';
 import { locationApi, vehicleApi } from '../services/api';
+
+// Fix for default Leaflet icon in React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+// Custom Neon Icon for vehicles
+const neonIcon = new L.DivIcon({
+  className: 'custom-neon-icon',
+  html: `<div style="width: 16px; height: 16px; background-color: #00e676; border-radius: 50%; box-shadow: 0 0 15px #00e676; position: relative;"><div style="position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border-radius: 50%; background-color: rgba(0, 230, 118, 0.3); animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+});
 
 const Dashboard = () => {
   const [liveLocations, setLiveLocations] = useState([]);
@@ -110,34 +128,38 @@ const Dashboard = () => {
 
       {/* Main Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-        {/* Live Map Panel (Mocked visual representation) */}
+        {/* Live Map Panel */}
         <div className="lg:col-span-2 card flex flex-col overflow-hidden relative group">
-          <div className="absolute inset-0 bg-[#0a0f18] z-0">
-             {/* Abstract grid pattern representing a map in "HERE dark" style */}
-            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(#28364a 1px, transparent 1px), linear-gradient(90deg, #28364a 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-            
-            {/* Render mock vehicle dots on the "map" */}
-            {liveLocations.map((loc, i) => (
-              <div 
-                key={i} 
-                className="absolute w-4 h-4 bg-here-neon rounded-full shadow-[0_0_15px_#00e676] transition-all duration-1000 ease-in-out"
-                style={{ 
-                  left: `${((loc.lon % 1) * 100).toFixed(2)}%`, 
-                  top: `${((loc.lat % 1) * 100).toFixed(2)}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
-                <div className="absolute -inset-2 bg-here-neon/30 rounded-full animate-ping"></div>
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-here-card text-xs px-2 py-1 rounded border border-here-border text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                  {loc.reg}
-                </div>
-              </div>
-            ))}
+          <div className="flex-1 w-full h-full relative z-0">
+            <MapContainer 
+              center={[18.5204, 73.8567]} // Default to Pune, India coordinates or dynamic
+              zoom={12} 
+              style={{ height: '100%', width: '100%', background: '#0a0f18' }}
+              zoomControl={false}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              />
+              {liveLocations.map((loc, i) => (
+                <Marker 
+                  key={`${loc.reg}-${loc.timestamp}`} 
+                  position={[loc.lat, loc.lon]}
+                  icon={neonIcon}
+                >
+                  <Popup className="custom-popup">
+                    <div className="text-center">
+                      <strong className="block text-gray-800">{loc.reg}</strong>
+                      <span className="text-xs text-gray-500">Status: {loc.status}</span>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
           
-          <div className="relative z-10 p-5 bg-gradient-to-b from-here-card to-transparent border-b border-here-border/50 flex justify-between items-center">
-            <h3 className="font-semibold text-white">Live Tracking Map</h3>
-            <button className="btn-secondary text-xs py-1.5">Expand</button>
+          <div className="absolute top-0 left-0 w-full z-[1000] p-5 bg-gradient-to-b from-here-card/90 to-transparent flex justify-between items-center pointer-events-none">
+            <h3 className="font-semibold text-white pointer-events-auto">Live Tracking Map</h3>
           </div>
         </div>
 
