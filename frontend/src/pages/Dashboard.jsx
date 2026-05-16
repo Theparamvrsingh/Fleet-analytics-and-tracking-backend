@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, CarFront, AlertTriangle, Route } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { socketService } from '../services/socket';
 import { locationApi, vehicleApi } from '../services/api';
+
+// Component to auto-center map when locations update
+const ChangeView = ({ center, zoom }) => {
+  const map = useMap();
+  if (center && center[0] && center[1]) {
+    map.setView(center, zoom);
+  }
+  return null;
+};
 
 // Fix for default Leaflet icon in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -24,15 +33,34 @@ const neonIcon = new L.DivIcon({
 const Dashboard = () => {
   const [liveLocations, setLiveLocations] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [mapCenter, setMapCenter] = useState([18.5204, 73.8567]); // Default Pune
   const [stats, setStats] = useState({
     active: 0,
     total: 0,
     alerts: 0,
-    distance: 12540 // Mock distance for now
+    distance: 0
   });
 
+  const updateDashboardStats = (locations, totalVehicles) => {
+    const activeCount = locations.filter(l => l.status === 'Active').length;
+    
+    setStats(prev => ({
+      ...prev,
+      total: totalVehicles,
+      active: activeCount,
+      // Total distance can be mocked as a function of data points for now, 
+      // or calculated properly if we had historical points.
+      distance: (locations.length * 1.2).toFixed(1),
+      alerts: locations.filter(l => l.status === 'Alert').length || prev.alerts
+    }));
+
+    // Auto-center map to the first active vehicle if available
+    if (locations.length > 0) {
+      setMapCenter([locations[0].lat, locations[0].lon]);
+    }
+  };
+
   useEffect(() => {
-    // Initial data fetch
     const fetchData = async () => {
       try {
         const [vehiclesRes, locationsRes] = await Promise.all([
@@ -41,39 +69,20 @@ const Dashboard = () => {
         ]);
         
         setVehicles(vehiclesRes.data);
-        
-        // Count active vehicles (those with recent locations)
-        const activeCount = locationsRes.data.filter(l => l.status === 'Active').length || Math.floor(vehiclesRes.data.length * 0.8);
-        
-        setStats(prev => ({
-          ...prev,
-          total: vehiclesRes.data.length,
-          active: activeCount,
-          alerts: Math.floor(Math.random() * 5) // Mock alerts
-        }));
-
-        setLiveLocations(locationsRes.data.slice(0, 10)); // Just keep latest 10 for display
+        setLiveLocations(locationsRes.data);
+        updateDashboardStats(locationsRes.data, vehiclesRes.data.length);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
     };
 
     fetchData();
-
-    // WebSocket connection for real-time updates
     socketService.connect();
 
-    // Listen to the actual 'location' event sent from Spring Boot backend
-    // It sends a List<SocketIOVehicleTrackingDataResponse>
     socketService.subscribe('location', (dataArray) => {
-      if (Array.isArray(dataArray) && dataArray.length > 0) {
-        setLiveLocations(dataArray.slice(0, 10));
-      } else if (dataArray && dataArray.reg) {
-        // Fallback just in case it sends a single object
-        setLiveLocations(prev => {
-          const newLocations = [dataArray, ...prev].slice(0, 10);
-          return newLocations;
-        });
+      if (Array.isArray(dataArray)) {
+        setLiveLocations(dataArray);
+        updateDashboardStats(dataArray, vehicles.length);
       }
     });
 
@@ -81,7 +90,7 @@ const Dashboard = () => {
       socketService.unsubscribe('location');
       socketService.disconnect();
     };
-  }, []);
+  }, [vehicles.length]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -93,61 +102,59 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Vehicles" 
           value={stats.total} 
           icon={<CarFront className="text-here-accent" />} 
-          trend="+2 this month"
+          trend="In database"
           trendUp={true}
         />
         <StatCard 
           title="Active Vehicles" 
           value={stats.active} 
           icon={<Activity className="text-here-neon" />} 
-          trend="Currently online"
-          trendUp={true}
+          trend="Tracking now"
+          trendUp={stats.active > 0}
         />
         <StatCard 
           title="Total Distance" 
           value={`${stats.distance} km`} 
           icon={<Route className="text-here-teal" />} 
-          trend="+450 km today"
+          trend="Session total"
           trendUp={true}
         />
         <StatCard 
           title="Speed Alerts" 
           value={stats.alerts} 
           icon={<AlertTriangle className="text-red-400" />} 
-          trend="-2 from yesterday"
+          trend="System alerts"
           trendUp={false}
           danger={stats.alerts > 0}
         />
       </div>
 
-      {/* Main Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-        {/* Live Map Panel */}
         <div className="lg:col-span-2 card flex flex-col overflow-hidden relative group">
           <div className="flex-1 w-full h-full relative z-0">
             <MapContainer 
-              center={[18.5204, 73.8567]} // Default to Pune, India coordinates or dynamic
-              zoom={12} 
+              center={mapCenter}
+              zoom={13} 
               style={{ height: '100%', width: '100%', background: '#0a0f18' }}
               zoomControl={false}
             >
+              <ChangeView center={mapCenter} zoom={13} />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               />
               {liveLocations.map((loc, i) => (
                 <Marker 
-                  key={`${loc.reg}-${loc.timestamp}`} 
+                  key={`${loc.reg}-${i}`} 
                   position={[loc.lat, loc.lon]}
                   icon={neonIcon}
                 >
-                  <Popup className="custom-popup">
+                  <Popup>
                     <div className="text-center">
                       <strong className="block text-gray-800">{loc.reg}</strong>
                       <span className="text-xs text-gray-500">Status: {loc.status}</span>
@@ -163,7 +170,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Live Event Feed */}
         <div className="card flex flex-col overflow-hidden">
           <div className="p-5 border-b border-here-border bg-here-card/80">
             <h3 className="font-semibold text-white">Live Events</h3>
@@ -186,7 +192,7 @@ const Dashboard = () => {
                       <span className="text-xs text-here-muted font-mono">{loc.lat.toFixed(4)}, {loc.lon.toFixed(4)}</span>
                     </div>
                   </div>
-                  <div className="text-xs text-here-muted whitespace-nowrap">
+                  <div className="text-xs text-here-muted whitespace-nowrap text-[10px]">
                     {new Date(loc.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
                 </div>

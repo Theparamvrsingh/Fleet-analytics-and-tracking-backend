@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { socketService } from '../services/socket';
 import { locationApi } from '../services/api';
+
+// Component to auto-center map when locations update
+const ChangeView = ({ center, zoom }) => {
+  const map = useMap();
+  if (center && center[0] && center[1]) {
+    map.setView(center, zoom);
+  }
+  return null;
+};
 
 // Reuse the neon icon
 const neonIcon = new L.DivIcon({
@@ -14,12 +23,16 @@ const neonIcon = new L.DivIcon({
 
 const MapPage = () => {
   const [liveLocations, setLiveLocations] = useState([]);
+  const [mapCenter, setMapCenter] = useState([18.5204, 73.8567]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const locationsRes = await locationApi.getLocations();
         setLiveLocations(locationsRes.data);
+        if (locationsRes.data.length > 0) {
+          setMapCenter([locationsRes.data[0].lat, locationsRes.data[0].lon]);
+        }
       } catch (error) {
         console.error("Error fetching map data:", error);
       }
@@ -30,6 +43,7 @@ const MapPage = () => {
     socketService.subscribe('location', (dataArray) => {
       if (Array.isArray(dataArray) && dataArray.length > 0) {
         setLiveLocations(dataArray);
+        setMapCenter([dataArray[0].lat, dataArray[0].lon]);
       }
     });
 
@@ -43,21 +57,22 @@ const MapPage = () => {
       <h2 className="text-2xl font-bold text-white">Live Operations Map</h2>
       <div className="card flex-1 w-full relative overflow-hidden min-h-[500px]">
         <MapContainer 
-          center={[18.5204, 73.8567]} 
-          zoom={12} 
+          center={mapCenter} 
+          zoom={13} 
           style={{ height: '100%', width: '100%', background: '#0a0f18' }}
         >
+          <ChangeView center={mapCenter} zoom={13} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          {liveLocations.map((loc) => (
+          {liveLocations.map((loc, i) => (
             <Marker 
-              key={`${loc.reg}-${loc.timestamp}`} 
+              key={`${loc.reg}-${i}`} 
               position={[loc.lat, loc.lon]}
               icon={neonIcon}
             >
-              <Popup className="custom-popup">
+              <Popup>
                 <div className="text-center">
                   <strong className="block text-gray-800">{loc.reg}</strong>
                   <span className="text-xs text-gray-500">Status: {loc.status}</span>
