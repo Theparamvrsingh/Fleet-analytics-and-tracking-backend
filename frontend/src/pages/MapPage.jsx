@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Circle, Polyline, useMap } from 'react-leaflet';
 import { socketService } from '../services/socket';
 import { locationApi } from '../services/api';
 import { Navigation, Clock, Gauge, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
@@ -114,6 +114,36 @@ const MapPage = () => {
               </CircleMarker>
             );
           })}
+
+          {/* ── Trip Replay route line ── */}
+          {history.length > 1 && selected && (() => {
+            const pts = history.map(h => [Number(h.lat), Number(h.lon)]);
+            const start = pts[pts.length - 1]; // oldest
+            const end   = pts[0];              // most recent
+            return (
+              <>
+                {/* gradient route line */}
+                <Polyline
+                  positions={pts}
+                  pathOptions={{ color: '#00bfa5', weight: 3, opacity: 0.85, dashArray: '8 4' }}
+                />
+                {/* start dot (oldest) */}
+                <CircleMarker center={start} radius={7}
+                  pathOptions={{ fillColor: '#64748b', color: '#ffffff', weight: 2, fillOpacity: 1 }}>
+                  <Tooltip direction="top" offset={[0,-8]} opacity={0.9}>
+                    <span style={{fontSize:10, fontWeight:700}}>Trip Start</span>
+                  </Tooltip>
+                </CircleMarker>
+                {/* end dot (latest / current) */}
+                <CircleMarker center={end} radius={9}
+                  pathOptions={{ fillColor: '#00e676', color: '#ffffff', weight: 2.5, fillOpacity: 1 }}>
+                  <Tooltip permanent direction="top" offset={[0,-12]} opacity={0.95}>
+                    <span style={{fontSize:10, fontWeight:700, color:'#00e676'}}>▶ Current</span>
+                  </Tooltip>
+                </CircleMarker>
+              </>
+            );
+          })()}
         </MapContainer>
 
         {/* legend */}
@@ -125,6 +155,12 @@ const MapPage = () => {
               <div className="w-3 h-1 border-t-2 border-dashed border-red-400" />
               <span className="text-here-muted">Restricted Zone</span>
             </div>
+            {history.length > 1 && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-1 border-t-2 border-dashed border-here-teal" />
+                <span className="text-here-muted">Trip Route</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
