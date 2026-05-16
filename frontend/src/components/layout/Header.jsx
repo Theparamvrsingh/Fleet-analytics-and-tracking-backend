@@ -29,9 +29,9 @@ const Header = ({ toggleSidebar }) => {
           <div className="w-8 h-8 rounded-full bg-here-accent/20 border border-here-accent/50 flex items-center justify-center text-here-accent group-hover:bg-here-accent group-hover:text-white transition-colors">
             <User size={16} />
           </div>
-          <div className="hidden md:block">
-            <p className="text-sm font-medium text-white">Paramveer Singh</p>
-            <p className="text-xs text-here-muted">Chief Engineer</p>
+          <div className="hidden md:block text-right">
+            <p className="text-sm font-bold text-white tracking-tight">System Administrator</p>
+            <p className="text-[10px] text-here-muted uppercase font-bold tracking-widest">Active Session</p>
           </div>
         </div>
       </div>

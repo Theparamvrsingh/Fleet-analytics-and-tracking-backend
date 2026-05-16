@@ -19,9 +19,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       
       <aside className={`fixed md:relative z-50 w-64 bg-here-card border-r border-here-border flex flex-col h-full shrink-0 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-here-border">
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-here-neon shadow-[0_0_8px_#00e676]"></span>
-            Fleet<span className="text-here-teal">Analytics</span>
+          <h1 className="text-xl font-black text-white flex items-center gap-2 uppercase tracking-tighter">
+            Fleet<span className="text-here-teal">Intelligence</span>
           </h1>
           <button onClick={() => setIsOpen(false)} className="md:hidden text-here-muted hover:text-white">
             <X size={20} />
@@ -47,15 +46,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ))}
       </nav>
       
-      <div className="p-4 border-t border-here-border">
-        <div className="bg-[#0f1621] p-4 rounded-xl border border-here-border text-xs">
-          <p className="text-white font-bold mb-2">Paramveer Singh</p>
-          <div className="flex items-center gap-2 text-here-neon">
-            <span className="w-1.5 h-1.5 rounded-full bg-here-neon animate-pulse"></span>
-            System Live
-          </div>
-        </div>
-      </div>
+
     </aside>
     </>
   );
