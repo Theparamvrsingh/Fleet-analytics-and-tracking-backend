@@ -1,7 +1,6 @@
 package com.theparamvrsingh.fleetanalytics.service;
 
 
-import com.corundumstudio.socketio.SocketIOServer;
 import com.theparamvrsingh.fleetanalytics.mapper.VehicleTrackingDataToLocation;
 import com.theparamvrsingh.fleetanalytics.mapper.VehicleTrackingDataToSocketResponse;
 import com.theparamvrsingh.fleetanalytics.model.VehicleTrackingData;
